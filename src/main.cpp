@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-// Asignacion de strings a pines:
+// Asignacion de macros a pines:
 
 //  Motores:
 #define IN0 18
@@ -55,13 +55,13 @@ void setup()
 }
 void loop()
 {
-  while (digitalRead(J1))
+  while ((GPIO_IN_REG >> J1) & 1)
   {
     // Racing
     timer();
     race();
   }
-  while (digitalRead(J3))
+  while ((GPIO_IN_REG >> J3) & 1)
   {
     // Despeje
     timer();
@@ -76,7 +76,7 @@ void timer(){
   {
     if (timerRead(tmp) >= 4800000)
     {
-      digitalWrite(Led, HIGH);
+      WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<Led));
       flagS = true;
     }
   }
@@ -84,15 +84,15 @@ void timer(){
 
 void race()
 {
-  int estadosR = digitalRead(S0) >> 1 || digitalRead(S1);
+  int estadosR = (((GPIO_IN1_REG >> (S0 - 32)) & 1U) >> 1)| ((GPIO_IN1_REG >> (S1 - 32)) & 1U);
   switch(estadosR){
-    case 11:
+    case 0b11:
       adelante();
       break;
-    case 10:
+    case 0b10:
       izquierda();
       break;
-    case 01:
+    case 0b01:
       derecha();
       break;
     default:
@@ -110,29 +110,29 @@ void sumo()
 
 void adelante()
 {
-  digitalWrite(IN0, HIGH);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW);
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
 }
 void atras()
 {
-  digitalWrite(IN0, LOW);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN1));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN3));
 }
 void izquierda()
 {
-  digitalWrite(IN0, HIGH);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
 }
 void derecha()
 {
-  digitalWrite(IN0, LOW);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW);
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
 }
