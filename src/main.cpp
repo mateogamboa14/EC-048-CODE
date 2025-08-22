@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "BluetoothSerial.h"
 
 // Asignacion de macros a pines:
 
@@ -31,14 +32,18 @@ int M1[2] = {IN2, IN3};
 
 int Jumpers[3] = {J1, J2, J3};
 
-bool flagS = false;
-hw_timer_t *tmp = NULL;
-void timer_init()
-{
+//FUNCIONES
+void timer_init();
+void timer();
+void desp();
+void sumo();
+void race();
+void atras();
+void adelante();
+void izquierda();
+void derecha();
 
-  tmp = timerBegin(0, 80, true);
-  timerStart(tmp);
-}
+/*CODIGO PRINCIPAL*/
 
 void setup()
 {
@@ -52,6 +57,7 @@ void setup()
   pinMode(S0, INPUT);
   pinMode(S1, INPUT);
   pinMode(Echo, INPUT);
+  SerialBT.begin("EC048");
 }
 void loop()
 {
@@ -70,7 +76,91 @@ void loop()
   timer();
   sumo();
 }
+
+/*ULTRASONIDO*/
+void desp()
+{
+  
+}
+
+/*BT*/
+
+BluetoothSerial SerialBT;
+void sumo()
+{
+  if (SerialBT.available()) {
+    char dat = SerialBT.read(); // Lee el carácter recibido
+    dat = tolower(dat);
+    
+    switch (dat) {
+      case 'w': 
+      adelante();
+      break;
+      
+      case 's': 
+      atras();
+        break;
+        
+        case 'a': 
+        izquierda();
+        break;
+        
+        case 'd': // Derecha
+        derecha();
+        break;
+        
+        
+        default: 
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, LOW);
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, LOW);
+        break;
+      }
+    }
+  }
+
+/*MOVIMIENTO MOTORES*/
+void adelante()
+{
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
+}
+void atras()
+{
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN1));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN3));
+}
+void izquierda()
+{
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
+}
+void derecha()
+{
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
+  WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
+  WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
+}
+
 /*TIMER*/
+bool flagS = false;
+hw_timer_t *tmp = NULL;
+void timer_init()
+{
+
+  tmp = timerBegin(0, 80, true);
+  timerStart(tmp);
+}
+
+
 void timer(){
   while (!(flagS))
   {
@@ -81,10 +171,11 @@ void timer(){
     }
   }
 }
+
 /*ROSSIBOT*/
 void race()
 {
-  int estadosR = (((GPIO_IN1_REG >> (S0 - 32)) & 1U) >> 1)| ((GPIO_IN1_REG >> (S1 - 32)) & 1U);
+  int estadosR = (((GPIO_IN1_REG >> (S0 - 32)) & 1) >> 1)| ((GPIO_IN1_REG >> (S1 - 32)) & 1);
   switch(estadosR){
     case 0b11:
       adelante();
@@ -99,56 +190,4 @@ void race()
       atras();
       break;
   }
-}
-/*ULTRASONIDO*/
-void desp()
-{
-  //45 de largo,m0ide
-  //35 para objetos chicos
-  digitalWrite(Trig,HIGH);
-  delayMicroseconds(10);
-  digitalWrite(Trig,LOW);
-  
-  
-  }
-  
-  if(((digitalRead(s1)&&digitalRead(s2))==0)&&(distancia>45)){
-    adelante();
-    izquierda();
-    delay(500);
-  }
-
-}
-/*BT*/
-void sumo()
-{
-}
-
-void adelante()
-{
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
-}
-void atras()
-{
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN1));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN3));
-}
-void izquierda()
-{
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN0));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN2));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
-}
-void derecha()
-{
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN0));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN1));
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<IN2));
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<IN3));
 }
