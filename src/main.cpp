@@ -70,7 +70,7 @@ void loop()
   timer();
   sumo();
 }
-
+/*TIMER*/
 void timer(){
   while (!(flagS))
   {
@@ -81,7 +81,7 @@ void timer(){
     }
   }
 }
-
+/*ROSSIBOT*/
 void race()
 {
   int estadosR = (((GPIO_IN1_REG >> (S0 - 32)) & 1U) >> 1)| ((GPIO_IN1_REG >> (S1 - 32)) & 1U);
@@ -100,10 +100,26 @@ void race()
       break;
   }
 }
+/*ULTRASONIDO*/
 void desp()
 {
+  //45 de largo,m0ide
+  //35 para objetos chicos
+  digitalWrite(Trig,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(Trig,LOW);
   
+  
+  }
+  
+  if(((digitalRead(s1)&&digitalRead(s2))==0)&&(distancia>45)){
+    adelante();
+    izquierda();
+    delay(500);
+  }
+
 }
+/*BT*/
 void sumo()
 {
 }
