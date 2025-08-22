@@ -1,0 +1,14 @@
+Acá tiro data de los registros que use para el ESP32
+
+LEER PIN DIGITAL
+(GPIO_IN_REG >> pin) & 1 
+para los pines que son mayores a 32 se les resta 32 para que entren en el registro correspondiente.
+(GPIO_IN1_REG >> (pin - 32)) & 1)
+
+SET
+WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<pin))
+
+RESET
+WRITE_PERI_REG(GPIO_OUT_W1TR_REG, (1<<Led))
+
+
